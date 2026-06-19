@@ -13,7 +13,7 @@ function ContactInfo() {
         💼 LinkedIn: <a href="https://www.linkedin.com/in/bonifa">linkedin.com/in/bonifa</a></p>
 
       <p>
-        Location: Chennai,Tamilnadu
+        📍 Location: Chennai,Tamilnadu
       </p>
 
     </div>

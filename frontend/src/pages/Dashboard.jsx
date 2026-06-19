@@ -1,35 +1,71 @@
 import { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 function Dashboard() {
   const [contacts, setContacts] = useState([]);
-
-  const admin = localStorage.getItem("admin");
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/contact")
-      .then((res) => res.json())
-      .then((data) => setContacts(data))
-      .catch((err) => console.log(err));
+    const token = localStorage.getItem("admin");
+
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    fetchContacts();
   }, []);
 
-  if (!admin) {
-    return <Navigate to="/login" />;
-  }
-
-  const logout = () => {
-    localStorage.removeItem("admin");
-    window.location.href = "/login";
+  const fetchContacts = async () => {
+    const res = await fetch("http://localhost:5000/api/contact");
+    const data = await res.json();
+    setContacts(data);
   };
+
+  const handleLogout = () => {
+    localStorage.removeItem("admin");
+    navigate("/login");
+  };
+
+  const exportFile = async (type) => {
+  const res = await fetch(`http://localhost:5000/api/contact/export/${type}`);
+
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+
+  const fileName =
+    type === "excel"
+      ? "contacts.xlsx"
+      : type === "csv"
+      ? "contacts.csv"
+      : "contacts.json";
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+
+  link.remove();
+  window.URL.revokeObjectURL(url);
+};
 
   return (
     <div className="dashboard-page">
       <div className="dashboard-container">
         <div className="dashboard-header">
           <h1>Admin Dashboard</h1>
-          <button onClick={logout} className="login-btn">
+
+          <button onClick={handleLogout} className="logout-btn">
             Logout
           </button>
+        </div>
+
+        <div className="export-buttons">
+          <button onClick={() => exportFile("csv")}>Download CSV</button>
+          <button onClick={() => exportFile("excel")}>Download Excel</button>
+          <button onClick={() => exportFile("json")}>Download JSON</button>
+          <button onClick={() => exportFile("pdf")}>Download PDF</button>
         </div>
 
         <table>
