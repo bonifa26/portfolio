@@ -2,16 +2,15 @@ const express = require("express");
 const Contact = require("../models/Contact");
 const { Parser } = require("json2csv");
 const ExcelJS = require("exceljs");
-const PDFDocument = require("pdfkit");
 
 const router = express.Router();
 
-// Save get in touch data
+// CREATE
 router.post("/", async (req, res) => {
   try {
     const { name, phone, email, suggestion } = req.body;
 
-    await Contact.create({
+    const contact = await Contact.create({
       name,
       phone,
       email,
@@ -21,16 +20,14 @@ router.post("/", async (req, res) => {
     res.json({
       success: true,
       message: "Contact saved successfully",
+      contact,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// Get all contacts
+// READ
 router.get("/", async (req, res) => {
   try {
     const contacts = await Contact.find().sort({ createdAt: -1 });
@@ -40,7 +37,42 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Export JSON
+// UPDATE
+router.put("/:id", async (req, res) => {
+  try {
+    const { name, phone, email, suggestion } = req.body;
+
+    const updatedContact = await Contact.findByIdAndUpdate(
+      req.params.id,
+      { name, phone, email, suggestion },
+      { new: true }
+    );
+
+    res.json({
+      success: true,
+      message: "Contact updated successfully",
+      updatedContact,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// DELETE
+router.delete("/:id", async (req, res) => {
+  try {
+    await Contact.findByIdAndDelete(req.params.id);
+
+    res.json({
+      success: true,
+      message: "Contact deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// EXPORT JSON
 router.get("/export/json", async (req, res) => {
   const contacts = await Contact.find().lean();
 
@@ -50,7 +82,7 @@ router.get("/export/json", async (req, res) => {
   res.send(JSON.stringify(contacts, null, 2));
 });
 
-// Export CSV
+// EXPORT CSV
 router.get("/export/csv", async (req, res) => {
   const contacts = await Contact.find().lean();
 
@@ -64,18 +96,18 @@ router.get("/export/csv", async (req, res) => {
   res.send(csv);
 });
 
-// Export Excel
+// EXPORT EXCEL
 router.get("/export/excel", async (req, res) => {
   const contacts = await Contact.find().lean();
 
   const workbook = new ExcelJS.Workbook();
-  const worksheet = workbook.addWorksheet("Get In Touch Entries");
+  const worksheet = workbook.addWorksheet("Contacts");
 
   worksheet.columns = [
     { header: "Name", key: "name", width: 25 },
     { header: "Phone", key: "phone", width: 20 },
     { header: "Email", key: "email", width: 30 },
-    { header: "Suggestion", key: "suggestion", width: 45 },
+    { header: "Suggestion", key: "suggestion", width: 40 },
     { header: "Date", key: "createdAt", width: 25 },
   ];
 
@@ -99,31 +131,6 @@ router.get("/export/excel", async (req, res) => {
 
   await workbook.xlsx.write(res);
   res.end();
-});
-
-// Export PDF
-router.get("/export/pdf", async (req, res) => {
-  const contacts = await Contact.find().lean();
-
-  res.setHeader("Content-Type", "application/pdf");
-  res.setHeader("Content-Disposition", "attachment; filename=contacts.pdf");
-
-  const doc = new PDFDocument({ margin: 40 });
-  doc.pipe(res);
-
-  doc.fontSize(20).text("Get In Touch Entries", { align: "center" });
-  doc.moveDown();
-
-  contacts.forEach((contact, index) => {
-    doc.fontSize(12).text(`${index + 1}. ${contact.name}`);
-    doc.text(`Phone: ${contact.phone}`);
-    doc.text(`Email: ${contact.email}`);
-    doc.text(`Suggestion: ${contact.suggestion}`);
-    doc.text(`Date: ${contact.createdAt}`);
-    doc.moveDown();
-  });
-
-  doc.end();
 });
 
 module.exports = router;
