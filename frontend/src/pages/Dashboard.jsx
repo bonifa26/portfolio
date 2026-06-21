@@ -25,7 +25,7 @@ function Dashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem("admin");
-    navigate("/login");
+    navigate("/");
   };
 
   const handleEdit = (item) => {
