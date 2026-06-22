@@ -3,34 +3,22 @@ const router = express.Router();
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const token = jwt.sign(
-  {
-    id: admin._id,
-    email: admin.email,
-  },
-  process.env.JWT_SECRET,
-  {
-    expiresIn: "1d",
-  }
-);
+
 // Admin Login
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    const admin = await User.findOne({ email });
 
-    if (!user) {
+    if (!admin) {
       return res.status(401).json({
         success: false,
         message: "Invalid Email",
       });
     }
 
-    const isMatch = await bcrypt.compare(
-      password,
-      user.password
-    );
+    const isMatch = await bcrypt.compare(password, admin.password);
 
     if (!isMatch) {
       return res.status(401).json({
@@ -41,7 +29,7 @@ router.post("/login", async (req, res) => {
 
     const token = jwt.sign(
       {
-        id: user._id,
+        id: admin._id,
       },
       process.env.JWT_SECRET,
       {
@@ -53,7 +41,7 @@ router.post("/login", async (req, res) => {
       success: true,
       token,
       user: {
-        email: user.email,
+        email: admin.email,
       },
     });
   } catch (error) {

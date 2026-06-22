@@ -2,6 +2,7 @@ const express = require("express");
 const Contact = require("../models/Contact");
 const { Parser } = require("json2csv");
 const ExcelJS = require("exceljs");
+const PDFDocument = require("pdfkit");
 
 const router = express.Router();
 
@@ -80,6 +81,36 @@ router.get("/export/json", async (req, res) => {
   res.setHeader("Content-Disposition", "attachment; filename=contacts.json");
 
   res.send(JSON.stringify(contacts, null, 2));
+});
+
+//export pdf
+router.get("/export/pdf", async (req, res) => {
+  const contacts = await Contact.find().sort({ createdAt: -1 }).lean();
+
+  const doc = new PDFDocument({ margin: 30, size: "A4" });
+
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", "attachment; filename=contacts.pdf");
+
+  doc.pipe(res);
+
+  doc.fontSize(20).text("Portfolio Contact Details", { align: "center" });
+  doc.moveDown();
+
+  contacts.forEach((contact, index) => {
+    doc.fontSize(13).text(`${index + 1}. ${contact.name || "N/A"}`, {
+      underline: true,
+    });
+    doc.fontSize(10).text(`Phone: ${contact.phone || "N/A"}`);
+    doc.text(`Email: ${contact.email || "N/A"}`);
+    doc.text(`Suggestion: ${contact.suggestion || "N/A"}`);
+    doc.text(`Date: ${contact.createdAt || "N/A"}`);
+    doc.moveDown();
+
+    if (doc.y > 720) doc.addPage();
+  });
+
+  doc.end();
 });
 
 // EXPORT CSV

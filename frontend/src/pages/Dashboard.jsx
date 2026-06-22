@@ -13,41 +13,19 @@ function Dashboard() {
 
   const navigate = useNavigate();
 
-  const getToken = () => localStorage.getItem("admin");
-
   useEffect(() => {
-    const token = getToken();
-
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-
     fetchContacts();
   }, []);
 
   const fetchContacts = async () => {
-    const token = getToken();
-
-    const res = await fetch("http://localhost:5000/api/contact", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (res.status === 401) {
-      localStorage.removeItem("admin");
-      navigate("/login");
-      return;
-    }
-
+    const res = await fetch("http://localhost:5000/api/contact");
     const data = await res.json();
     setContacts(data);
   };
 
   const handleLogout = () => {
     localStorage.removeItem("admin");
-    navigate("/login");
+    navigate("/");
   };
 
   const handleEdit = (item) => {
@@ -72,22 +50,13 @@ function Dashboard() {
   };
 
   const handleUpdate = async (id) => {
-    const token = getToken();
-
     const res = await fetch(`http://localhost:5000/api/contact/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(editData),
     });
-
-    if (res.status === 401) {
-      localStorage.removeItem("admin");
-      navigate("/login");
-      return;
-    }
 
     const data = await res.json();
 
@@ -101,26 +70,13 @@ function Dashboard() {
   };
 
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this entry?"
-    );
+    const confirmDelete = window.confirm("Are you sure you want to delete this entry?");
 
     if (!confirmDelete) return;
 
-    const token = getToken();
-
     const res = await fetch(`http://localhost:5000/api/contact/${id}`, {
       method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
     });
-
-    if (res.status === 401) {
-      localStorage.removeItem("admin");
-      navigate("/login");
-      return;
-    }
 
     const data = await res.json();
 
@@ -133,23 +89,7 @@ function Dashboard() {
   };
 
   const exportFile = async (type) => {
-    const token = getToken();
-
-    const res = await fetch(
-      `http://localhost:5000/api/contact/export/${type}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    if (res.status === 401) {
-      localStorage.removeItem("admin");
-      navigate("/login");
-      return;
-    }
-
+    const res = await fetch(`http://localhost:5000/api/contact/export/${type}`);
     const blob = await res.blob();
     const url = window.URL.createObjectURL(blob);
 
@@ -158,7 +98,10 @@ function Dashboard() {
         ? "contacts.xlsx"
         : type === "csv"
         ? "contacts.csv"
-        : "contacts.json";
+        : type === "pdf"
+        ? "contacts.pdf"
+        : "contacts.json"
+        ;
 
     const link = document.createElement("a");
     link.href = url;
@@ -169,6 +112,7 @@ function Dashboard() {
     link.remove();
     window.URL.revokeObjectURL(url);
   };
+ 
 
   return (
     <div className="dashboard-page">
@@ -180,13 +124,13 @@ function Dashboard() {
             Logout
           </button>
         </div>
-
         <p>Hi bonifa🖐</p>
-
         <div className="export-buttons">
+          
           <button onClick={() => exportFile("csv")}>Export CSV</button>
           <button onClick={() => exportFile("excel")}>Export Excel</button>
           <button onClick={() => exportFile("json")}>Export JSON</button>
+          <button onClick={() => exportFile("pdf")}>Export PDF</button>
         </div>
 
         <table>
@@ -206,14 +150,29 @@ function Dashboard() {
                 {editingId === item._id ? (
                   <>
                     <td>
-                      <input name="name" value={editData.name} onChange={handleChange} />
+                      <input
+                        name="name"
+                        value={editData.name}
+                        onChange={handleChange}
+                      />
                     </td>
+
                     <td>
-                      <input name="phone" value={editData.phone} onChange={handleChange} />
+                      <input
+                        name="phone"
+                        value={editData.phone}
+                        onChange={handleChange}
+                      />
                     </td>
+
                     <td>
-                      <input name="email" value={editData.email} onChange={handleChange} />
+                      <input
+                        name="email"
+                        value={editData.email}
+                        onChange={handleChange}
+                      />
                     </td>
+
                     <td>
                       <input
                         name="suggestion"
@@ -221,10 +180,12 @@ function Dashboard() {
                         onChange={handleChange}
                       />
                     </td>
+
                     <td>
                       <button className="save-btn" onClick={() => handleUpdate(item._id)}>
                         Save
                       </button>
+
                       <button className="cancel-btn" onClick={handleCancel}>
                         Cancel
                       </button>
@@ -236,10 +197,12 @@ function Dashboard() {
                     <td>{item.phone}</td>
                     <td>{item.email}</td>
                     <td>{item.suggestion}</td>
+
                     <td>
                       <button className="edit-btn" onClick={() => handleEdit(item)}>
                         Edit
                       </button>
+
                       <button className="delete-btn" onClick={() => handleDelete(item._id)}>
                         Delete
                       </button>
@@ -253,6 +216,7 @@ function Dashboard() {
       </div>
     </div>
   );
+
 }
 
 export default Dashboard;
