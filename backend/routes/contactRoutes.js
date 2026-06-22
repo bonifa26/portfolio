@@ -3,7 +3,7 @@ const Contact = require("../models/Contact");
 const { Parser } = require("json2csv");
 const ExcelJS = require("exceljs");
 const PDFDocument = require("pdfkit");
-
+const auth = require("../middleware/auth");
 const router = express.Router();
 
 // CREATE
@@ -29,7 +29,7 @@ router.post("/", async (req, res) => {
 });
 
 // READ
-router.get("/", async (req, res) => {
+router.get("/", auth, async (req, res) => {
   try {
     const contacts = await Contact.find().sort({ createdAt: -1 });
     res.json(contacts);
@@ -39,7 +39,7 @@ router.get("/", async (req, res) => {
 });
 
 // UPDATE
-router.put("/:id", async (req, res) => {
+router.put("/:id", auth, async (req, res) => {
   try {
     const { name, phone, email, suggestion } = req.body;
 
@@ -60,7 +60,7 @@ router.put("/:id", async (req, res) => {
 });
 
 // DELETE
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", auth, async (req, res) => {
   try {
     await Contact.findByIdAndDelete(req.params.id);
 
@@ -74,7 +74,7 @@ router.delete("/:id", async (req, res) => {
 });
 
 // EXPORT JSON
-router.get("/export/json", async (req, res) => {
+router.get("/export/json", auth, async (req, res) => {
   const contacts = await Contact.find().lean();
 
   res.setHeader("Content-Type", "application/json");
@@ -84,7 +84,7 @@ router.get("/export/json", async (req, res) => {
 });
 
 //export pdf
-router.get("/export/pdf", async (req, res) => {
+router.get("/export/pdf", auth, async (req, res) => {
   const contacts = await Contact.find().sort({ createdAt: -1 }).lean();
 
   const doc = new PDFDocument({ margin: 30, size: "A4" });
@@ -114,7 +114,7 @@ router.get("/export/pdf", async (req, res) => {
 });
 
 // EXPORT CSV
-router.get("/export/csv", async (req, res) => {
+router.get("/export/csv", auth, async (req, res) => {
   const contacts = await Contact.find().lean();
 
   const fields = ["name", "phone", "email", "suggestion", "createdAt"];
@@ -128,7 +128,7 @@ router.get("/export/csv", async (req, res) => {
 });
 
 // EXPORT EXCEL
-router.get("/export/excel", async (req, res) => {
+router.get("/export/excel", auth, async (req, res) => {
   const contacts = await Contact.find().lean();
 
   const workbook = new ExcelJS.Workbook();
