@@ -34,7 +34,7 @@ function ContactForm() {
 
         <input type="text" name="name" placeholder="Enter your name" required />
 
-        <input type="text" name="phone" placeholder="Enter your phone number" required />
+        <input type="number" name="phone" placeholder="Enter your phone number" required />
 
         <input type="email" name="email" placeholder="Enter your email" required />
 
