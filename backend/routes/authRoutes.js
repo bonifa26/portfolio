@@ -3,7 +3,16 @@ const router = express.Router();
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-
+const token = jwt.sign(
+  {
+    id: admin._id,
+    email: admin.email,
+  },
+  process.env.JWT_SECRET,
+  {
+    expiresIn: "1d",
+  }
+);
 // Admin Login
 router.post("/login", async (req, res) => {
   try {
