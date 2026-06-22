@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -29,6 +29,11 @@ function Login() {
     <div className="login-page">
       <div className="login-container">
         <h1>Admin Login</h1>
+        <div className="login-nav">
+  <Link to="/" className="home-btn">
+    ← Home
+  </Link>
+</div>
 
         <form onSubmit={handleLogin}>
           <input type="email" placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
