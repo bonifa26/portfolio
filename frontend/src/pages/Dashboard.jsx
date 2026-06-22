@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 function Dashboard() {
   const [contacts, setContacts] = useState([]);
   const [editingId, setEditingId] = useState(null);
+
   const [editData, setEditData] = useState({
     name: "",
     phone: "",
@@ -17,9 +18,25 @@ function Dashboard() {
     fetchContacts();
   }, []);
 
+  const getToken = () => localStorage.getItem("admin");
+
   const fetchContacts = async () => {
-    const res = await fetch("http://localhost:5000/api/contact");
+    const token = getToken();
+
+    const res = await fetch("http://localhost:5000/api/contact", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
     const data = await res.json();
+
+    if (data.success === false) {
+      alert(data.message);
+      navigate("/login");
+      return;
+    }
+
     setContacts(data);
   };
 
@@ -50,10 +67,13 @@ function Dashboard() {
   };
 
   const handleUpdate = async (id) => {
+    const token = getToken();
+
     const res = await fetch(`http://localhost:5000/api/contact/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(editData),
     });
@@ -70,12 +90,19 @@ function Dashboard() {
   };
 
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this entry?");
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this entry?"
+    );
 
     if (!confirmDelete) return;
 
+    const token = getToken();
+
     const res = await fetch(`http://localhost:5000/api/contact/${id}`, {
       method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
 
     const data = await res.json();
@@ -89,7 +116,14 @@ function Dashboard() {
   };
 
   const exportFile = async (type) => {
-    const res = await fetch(`http://localhost:5000/api/contact/export/${type}`);
+    const token = getToken();
+
+    const res = await fetch(`http://localhost:5000/api/contact/export/${type}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
     const blob = await res.blob();
     const url = window.URL.createObjectURL(blob);
 
@@ -100,8 +134,7 @@ function Dashboard() {
         ? "contacts.csv"
         : type === "pdf"
         ? "contacts.pdf"
-        : "contacts.json"
-        ;
+        : "contacts.json";
 
     const link = document.createElement("a");
     link.href = url;
@@ -112,7 +145,6 @@ function Dashboard() {
     link.remove();
     window.URL.revokeObjectURL(url);
   };
- 
 
   return (
     <div className="dashboard-page">
@@ -124,9 +156,10 @@ function Dashboard() {
             Logout
           </button>
         </div>
+
         <p>Hi bonifa🖐</p>
+
         <div className="export-buttons">
-          
           <button onClick={() => exportFile("csv")}>Export CSV</button>
           <button onClick={() => exportFile("excel")}>Export Excel</button>
           <button onClick={() => exportFile("json")}>Export JSON</button>
@@ -182,7 +215,10 @@ function Dashboard() {
                     </td>
 
                     <td>
-                      <button className="save-btn" onClick={() => handleUpdate(item._id)}>
+                      <button
+                        className="save-btn"
+                        onClick={() => handleUpdate(item._id)}
+                      >
                         Save
                       </button>
 
@@ -199,11 +235,17 @@ function Dashboard() {
                     <td>{item.suggestion}</td>
 
                     <td>
-                      <button className="edit-btn" onClick={() => handleEdit(item)}>
+                      <button
+                        className="edit-btn"
+                        onClick={() => handleEdit(item)}
+                      >
                         Edit
                       </button>
 
-                      <button className="delete-btn" onClick={() => handleDelete(item._id)}>
+                      <button
+                        className="delete-btn"
+                        onClick={() => handleDelete(item._id)}
+                      >
                         Delete
                       </button>
                     </td>
@@ -216,7 +258,6 @@ function Dashboard() {
       </div>
     </div>
   );
-
 }
 
 export default Dashboard;
